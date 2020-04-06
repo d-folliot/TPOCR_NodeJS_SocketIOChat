@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Chat</title> 
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+
+            html{
+                height : 100%;
+            }
+            body {
+                height:100%;
+                font: 13px Helvetica, Arial;
+                display:grid;
+                grid-template-areas: "head" "mess";
+                grid-template-rows: 100px 1fr ;
+                grid-template-columns: 1fr;
+            }
+ 
+            h1{
+                text-align: center;
+            }
+            header{
+                grid-area: head;
+            }
+            form {
+                
+                background: #000;
+                padding: 5px;
+                bottom: 0;
+                width: 100%;
+            }
+
+            #m{
+                border: 0;
+                padding: 10px;
+                width: 80%;
+                margin-right: .5%;
+                border-radius: 15px;
+            }
+
+            form button {
+                width: 9%;
+                background: rgb(130, 224, 255);
+                border: none;
+                padding: 10px;
+                border-radius: 15px;
+            }
+
+            #messages {                
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+                border-radius: 15px;
+                grid-area: mess;
+            }
+
+            #messages li {
+                padding: 5px 10px;
+            }
+
+            #messages li:nth-child(odd) {
+                background: #eee;
+            }
+            ul{
+                overflow-y: scroll;
+            }
+        </style>
+    </head>
+
+    <body>
+        
+        <header>
+            <h1>Le super chat temps réel!</h1>
+            <form action="">
+                <input id="m" autocomplete="off" placeholder="votre message..."/>
+                <button>Envoyer</button>
+            </form>
+        </header>
+        <ul id="messages"></ul>
+        
+        <script src="socket.io/socket.io.js"></script>
+        <script>
+
+            let socket = io();
+            let pseudo = prompt ('quel est votre pseudo?');
+            socket.emit('identity', pseudo);
+            let form = document.querySelector('form');
+            form.addEventListener('submit', function (e) {
+                let m = document.querySelector('#m');
+                e.preventDefault(); // prevents page reloading
+                var mval =m.value;
+                socket.emit('chat message',  mval);
+                appendli( [pseudo,mval]);
+                m.value = '';
+                return false;
+            });
+            socket.on('chat message', function (msg) {
+                appendli(msg);
+            });
+
+            function appendli(msg){
+                let messages = document.querySelector('#messages');
+                let line = document.createElement("li");
+                if (msg[1]=="" ||  msg[1].match( /^\s+$/)) return;
+                let date = new Date();
+                line.appendChild(document.createTextNode("[" +date.getHours()+ ":"+ date.getMinutes() + ":"+ date.getSeconds()+"] "+msg[0] + " : " + msg[1]));
+                messages.appendChild(line);
+                messages.scrollTo(0, messages.scrollHeight );                
+            }
+
+        </script>
+    </body>
+</html>
