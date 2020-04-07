@@ -9,6 +9,7 @@ const session =  require("express-session")({
     saveUninitialized: true
   });
 const io = require ('socket.io')(http);
+const ent = require('ent');
 
 app
     .use(cookieParser())
@@ -29,13 +30,13 @@ io.
     .on('connection', function (socket) { 
         socket.on('chat message', function (info) {
             if (info != "" &&  !info.match( /^\s+$/)) 
-                socket.broadcast.emit('chat message', [socket.handshake.session.pseudo, info]); // on recup ensuite les variables de sessions dans socket.handshake.session
+                socket.broadcast.emit('chat message', [socket.handshake.session.pseudo, ent.encode(info)]); // on recup ensuite les variables de sessions dans socket.handshake.session
         });
         socket.on('disconnect', function () {
             socket.broadcast.emit('chat message',['', socket.handshake.session.pseudo + ' s\'est déconnecté']);
         });
         socket.on('identity', function(pseudo){
-            socket.handshake.session.pseudo=pseudo;   
+            socket.handshake.session.pseudo=ent.encode(pseudo);   
             socket.handshake.session.save(); 
             socket.broadcast.emit('chat message', ['', socket.handshake.session.pseudo + ' s\'est connecté']);   
         });
