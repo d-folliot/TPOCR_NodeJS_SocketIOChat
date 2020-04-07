@@ -71,17 +71,29 @@
             ul{
                 overflow-y: scroll;
             }
+            .spanname{
+                background-color: black;
+                color: white;
+            }
+            .spanco{
+                font-style: italic;
+            }
+            header p {
+                font-weight: bold;
+                text-align: center;
+            }
         </style>
     </head>
 
     <body>
         
         <header>
-            <h1>Le super chat temps réel!</h1>
+            <h1>Le chat temps réel avec socket.io!</h1>
             <form action="">
                 <input id="m" autocomplete="off" placeholder="votre message..."/>
                 <button>Envoyer</button>
             </form>
+            <p> &COPY;Damien</p>
         </header>
         <ul id="messages"></ul>
         
@@ -89,7 +101,10 @@
         <script>
 
             let socket = io();
-            let pseudo = prompt ('quel est votre pseudo?');
+            let pseudo = ""
+            do{
+                pseudo =prompt ('quel est votre pseudo?');
+            }while (pseudo =="" || pseudo.length >16)
             socket.emit('identity', pseudo);
             let form = document.querySelector('form');
             form.addEventListener('submit', function (e) {
@@ -101,6 +116,7 @@
                 m.value = '';
                 return false;
             });
+            
             socket.on('chat message', function (msg) {
                 appendli(msg);
             });
@@ -108,11 +124,34 @@
             function appendli(msg){
                 let messages = document.querySelector('#messages');
                 let line = document.createElement("li");
-                if (msg[1]=="" ||  msg[1].match( /^\s+$/)) return;
+                if (msg[1]=="" ||  msg[1].match( /^\s+$/)) return; // on ne va pas plus loin si le message est vide ou juste avec des espaces
+                // creation de la ligne en 3 morceau DATE NOM MESSAGE
                 let date = new Date();
-                line.appendChild(document.createTextNode("[" +date.getHours()+ ":"+ date.getMinutes() + ":"+ date.getSeconds()+"] "+msg[0] + " : " + msg[1]));
+                let spanDate = document.createElement('span');                
+                spanDate.textContent= "[" + addZero(date.getHours())+ ":"+ addZero(date.getMinutes()) + ":"+ addZero(date.getSeconds())+"] ";
+                spanDate.className="spandate";
+
+                let spanName = document.createElement('span');
+                spanName.textContent = msg[0] ;
+                spanName.className = "spanname";
+
+                let spanMess = document.createElement('span');
+                spanMess.textContent=" : " +  msg[1];
+                if (msg[0] =="")
+                    spanMess.className ="spanco"; // messages de connection/deco car ils sont les seuls envoyés avec un msg[0] == ""
+                else
+                    spanMess.className ="spanmess";
+
+                line.appendChild(spanDate);
+                line.appendChild(spanName);
+                line.appendChild(spanMess);
                 messages.appendChild(line);
-                messages.scrollTo(0, messages.scrollHeight );                
+                //messages.scrollTo(0, messages.scrollHeight ); <- ne fonctionne pas sur Edge  donc on remplace par ci dessous
+                messages.scrollTop = messages.scrollHeight;     // permet un auto scroll bottom pour la partie chat    
+            }
+
+            function addZero (value){
+                return (parseInt(value) < 10)? "0"+value: ""+value;
             }
 
         </script>
